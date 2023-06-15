@@ -1,35 +1,21 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { LightboxCommonComponent } from './lightbox-common.component';
 import { LightboxComponent } from './lightbox.component';
-import { CrystalLightbox } from'./lightbox.service' 
+import { CrystalLightbox } from './lightbox.service';
 import { EventService } from './event.service';
-import { LightboxDirective } from'./lightbox.directive';
-import { LightboxGroupDirective } from'./lightbox-group.directive';
+import { LightboxDirective } from './lightbox.directive';
+import { LightboxGroupDirective } from './lightbox-group.directive';
+import { ImagePathPipe } from './pipes/image-path.pipe';
 
 @NgModule({
-    declarations: [
-        LightboxCommonComponent,
-        LightboxComponent,
-        LightboxDirective,
-        LightboxGroupDirective
-    ],
-    imports: [
-        CommonModule
-    ],
-    exports: [
-        LightboxDirective,
-        LightboxGroupDirective
-    ],
-    providers: [
-        CrystalLightbox,
-        EventService
-    ],
-    bootstrap: [
-        
-    ],
-    entryComponents: [
-        LightboxComponent
-    ]
+  declarations: [
+    LightboxComponent,
+    LightboxDirective,
+    LightboxGroupDirective,
+    ImagePathPipe,
+  ],
+  imports: [CommonModule],
+  exports: [LightboxDirective, LightboxGroupDirective],
+  providers: [CrystalLightbox, EventService],
 })
-export class CrystalLightboxModule { }
+export class CrystalLightboxModule {}

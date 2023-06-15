@@ -1,114 +1,128 @@
-import { Directive, ElementRef, Input, Output, HostListener, HostBinding, OnInit, EventEmitter } from '@angular/core';
-import { EventService } from './event.service';
-import { CrystalLightbox } from'./lightbox.service';
+import {
+  Directive,
+  ElementRef,
+  Input,
+  Output,
+  HostListener,
+  HostBinding,
+  EventEmitter,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { EventService, LightboxEvent } from './event.service';
+import { CrystalLightbox } from './lightbox.service';
 import { Properties, ImageExtended, Image } from './interfaces';
 
 @Directive({
-    selector: '[lightbox]'
+  selector: '[lightbox]',
 })
-
 export class LightboxDirective {
+  image: ImageExtended | undefined;
+  @Input() fullImage?: Image;
+  @Input() properties: Properties = {};
+  @Input() loop?: boolean;
+  @Input() backgroundOpacity?: number;
+  @Input() counter?: boolean;
+  @Input() imageMaxHeight?: string;
+  @Input() imageMaxWidth?: string;
+  @Input() animationDuration?: number;
+  @Input() animationMode?:
+    | 'default'
+    | 'zoom'
+    | 'zoom-blur'
+    | 'zoom-preloader'
+    | 'opacity'
+    | 'none';
+  @Input() animationTimingFunction?: string;
+  @Input() closeButtonText?: string;
+  @Input() counterSeparator?: string;
+  @Input() disable?: boolean;
+  @Input() simpleMode?: boolean;
+  @Input() backgroundColor?: 'black' | 'white';
+  @Input() hideThumbnail?: boolean;
+  @Input() gestureEnable?: boolean;
 
-    globalEventsSubscription;
-    image: ImageExtended;
-    @Input() fullImage: Image;
-    @Input() properties: Properties = {};
-    @Input() loop: boolean;
-    @Input() backgroundOpacity: number;
-    @Input() counter: boolean;
-    @Input() imageMaxHeight: string;
-    @Input() imageMaxWidth: string;
-    @Input() animationDuration: number;
-    @Input() animationMode: 'default' | 'zoom' | 'zoom-blur' | 'zoom-preloader' | 'opacity' | 'none'; 
-    @Input() animationTimingFunction: string;
-    @Input() closeButtonText: string;
-    @Input() counterSeparator: string;
-    @Input() disable: boolean;
-    @Input() simpleMode: boolean;
-    @Input() backgroundColor: 'black' | 'white';
-    @Input() hideThumbnail: boolean;
-    @Input() gestureEnable: boolean;
+  @Output() events: EventEmitter<any> = new EventEmitter<any>();
 
-    @Output() events: EventEmitter<any> = new EventEmitter<any>();
+  @HostBinding('class.lightbox-single') hostLightboxGroup = true;
+  @HostBinding('class.lightbox-simple-mode')
+  get hostSimpleMode() {
+    return this.simpleMode;
+  }
 
-    @HostBinding('class.lightbox-single') hostLightboxGroup: boolean = true;
-    @HostBinding('class.lightbox-simple-mode') 
-    get hostSimpleMode(){
-        return this.simpleMode;
+  get isGroupImage(): boolean {
+    return this.elementRef.nativeElement.closest('.lightbox-group');
+  }
+
+  constructor(
+    private lightbox: CrystalLightbox,
+    private eventService: EventService,
+    private elementRef: ElementRef
+  ) {
+    this.eventService.emitter.pipe(takeUntilDestroyed()).subscribe((event) => {
+      this.handleGlobalEvents(event);
+    });
+  }
+
+  @HostListener('click', ['$event'])
+  onClick() {
+    if (this.disable) {
+      return;
     }
 
-    get isGroupImage():boolean {
-        return this.elementRef.nativeElement.closest(".lightbox-group");
+    if (this.isGroupImage) {
+      this.eventService.emitChangeEvent({
+        type: 'thumbnail:click',
+        elementRef: this.elementRef,
+        properties: this.getNormalizedProperties(),
+      });
+    } else {
+      this.image = this.getImage();
+
+      this.lightbox.open({
+        images: [this.image],
+        properties: this.getNormalizedProperties(),
+        index: 0,
+      });
     }
+  }
 
-    constructor( 
-        private lightbox: CrystalLightbox, 
-        private eventService: EventService,
-        private elementRef: ElementRef) {
-        this.globalEventsSubscription = this.eventService.emitter.subscribe(
-            (event) => {
-                this.handleGlobalEvents(event);
-            }
-        );
-    }
+  handleGlobalEvents(event: LightboxEvent) {
+    this.events.emit(event);
+  }
 
-    @HostListener('click', ['$event'])
-    onClick(event){
-        if (this.disable){
-            return;
-        }
-
-        if (this.isGroupImage){
-            this.eventService.emitChangeEvent({
-                type: 'thumbnail:click',
-                elementRef: this.elementRef,
-                properties: this.properties
-            });
-        } else {
-            this.image = this.getImage();
-
-            this.lightbox.open({
-                images: [this.image],
-                properties: this.properties,
-                index: 0
-            });
-        }
-    }
-
-    ngOnChanges(changes) {
-        this.properties = Object.assign({}, this.properties, this.getProperties(changes));
-    }
-
-    handleGlobalEvents(event){
-        this.events.emit(event);
-    }
-
-    getImage(){
-        let image: ImageExtended = {};
-        const nativeElement = this.elementRef.nativeElement;
-
-        if (this.fullImage){
-            image.fullImage = this.fullImage;
-        }
-
-        image.thumbnailImage = {
-            path: nativeElement.src,
-            height: nativeElement.naturalHeight,
-            width: nativeElement.naturalWidth
-        }
-
-        image.nativeElement = nativeElement;
-        return image;
+  getImage() {
+    const nativeElement = this.elementRef.nativeElement;
+    const image: ImageExtended = {
+      fullImage: this.fullImage,
+      path: null,
+      nativeElement,
+      thumbnailImage: {
+        path: nativeElement.src,
+        height: nativeElement.naturalHeight,
+        width: nativeElement.naturalWidth,
+      },
     };
+    return image;
+  }
 
-    getProperties(changes){
-        let properties = {};
-
-        for (var prop in changes) {
-            if (prop !== 'fullImage'){
-                properties[prop] = changes[prop].currentValue;
-            }
-        }
-        return properties;
-    }
+  getNormalizedProperties(): Properties {
+    return {
+      ...this.properties,
+      loop: this.loop,
+      backgroundOpacity: this.backgroundOpacity,
+      counter: this.counter,
+      imageMaxHeight: this.imageMaxHeight,
+      imageMaxWidth: this.imageMaxWidth,
+      animationDuration: this.animationDuration,
+      animationMode: this.animationMode,
+      animationTimingFunction: this.animationTimingFunction,
+      closeButtonText: this.closeButtonText,
+      counterSeparator: this.counterSeparator,
+      disable: this.disable,
+      simpleMode: this.simpleMode,
+      backgroundColor: this.backgroundColor,
+      hideThumbnail: this.hideThumbnail,
+      gestureEnable: this.gestureEnable,
+    };
+  }
 }

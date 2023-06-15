@@ -1,1 +1,91 @@
-<angular-lightbox-nx-welcome></angular-lightbox-nx-welcome>
+<h1>Use cases</h1>
+
+<h2>Group</h2>
+<div lightbox-group>
+  <img *ngFor="let image of images" [src]="image.path" height="150" lightbox />
+</div>
+
+<h2>Single</h2>
+<div lightbox-group>
+  <img
+    src="https://mir-s3-cdn-cf.behance.net/project_modules/disp/d7550725434871.563453b951273.jpg"
+    height="250"
+    lightbox
+  />
+</div>
+
+<h2>Simple mode</h2>
+<div lightbox-group>
+  <img
+    src="https://mir-s3-cdn-cf.behance.net/project_modules/disp/d7550725434871.563453b951273.jpg"
+    height="250"
+    lightbox
+    [simpleMode]="true"
+  />
+</div>
+
+<h2>Counter</h2>
+<div lightbox-group>
+  <img
+    *ngFor="let image of images"
+    [src]="image.path"
+    height="150"
+    lightbox
+    [counter]="true"
+    counterSeparator=" of "
+  />
+</div>
+
+<h2>Background color</h2>
+<div lightbox-group>
+  <img
+    src="https://mir-s3-cdn-cf.behance.net/project_modules/disp/d7550725434871.563453b951273.jpg"
+    height="250"
+    lightbox
+    backgroundColor="white"
+  />
+</div>
+
+<h2>Background opacity</h2>
+<div lightbox-group>
+  <img
+    *ngFor="let image of images"
+    [src]="image.path"
+    height="150"
+    lightbox
+    [hideThumbnail]="false"
+    [backgroundOpacity]="0.8"
+  />
+</div>
+
+<h2>Animation duration</h2>
+<div lightbox-group>
+  <img
+    src="https://mir-s3-cdn-cf.behance.net/project_modules/disp/d7550725434871.563453b951273.jpg"
+    height="250"
+    lightbox
+    [animationDuration]="500"
+  />
+</div>
+
+<h2>Timing function</h2>
+<div lightbox-group>
+  <img
+    *ngFor="let image of images"
+    [src]="image.path"
+    height="150"
+    lightbox
+    [animationDuration]="500"
+    animationTimingFunction="cubic-bezier(0.77, 0, 0.175, 1)"
+  />
+</div>
+
+<h2>Disable</h2>
+<div lightbox-group>
+  <img
+    src="https://mir-s3-cdn-cf.behance.net/project_modules/disp/d7550725434871.563453b951273.jpg"
+    height="250"
+    lightbox
+    [disable]="true"
+  />
+</div>

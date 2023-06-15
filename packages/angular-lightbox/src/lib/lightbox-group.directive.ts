@@ -1,107 +1,117 @@
-import { Directive, HostBinding, ContentChildren, QueryList, ElementRef } from '@angular/core';
-import { EventService } from './event.service';
-import { LightboxDirective } from'./lightbox.directive' 
-import { CrystalLightbox } from'./lightbox.service';
+import {
+  Directive,
+  HostBinding,
+  ContentChildren,
+  QueryList,
+} from '@angular/core';
+import { EventService, LightboxEvent } from './event.service';
+import { LightboxDirective } from './lightbox.directive';
+import { CrystalLightbox } from './lightbox.service';
 import { Properties, ImageExtended } from './interfaces';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Directive({
-    selector: '[lightbox-group]'
+  selector: '[lightbox-group]',
 })
-
 export class LightboxGroupDirective {
-    thumbnailImageElement;
-    thumbnailLightboxDirective: LightboxDirective;
-    thumbnailImageIndex: number;
-    thumbnailImages = [];
-    images = [];
-    properties: Properties = {}; 
-    globalEventsSubscription;
+  thumbnailImageElement: Element | undefined;
+  thumbnailLightboxDirective?: LightboxDirective;
+  thumbnailImageIndex?: number;
+  thumbnailImages: Element[] = [];
+  images: ImageExtended[] = [];
+  properties: Properties = {};
 
-    get lightboxDirectiveList(){
-        if (this._lightboxDirectiveList){
-            return this._lightboxDirectiveList.toArray();
-        } else {
-            return [];
-        }
+  get lightboxDirectiveList() {
+    if (this._lightboxDirectiveList) {
+      return this._lightboxDirectiveList.toArray();
+    } else {
+      return [];
     }
+  }
 
-    @HostBinding('class.lightbox-group') hostLightboxGroup: boolean = true;
-    @ContentChildren(LightboxDirective, {descendants: true}) _lightboxDirectiveList: QueryList<LightboxDirective>; 
-    constructor(
-        private eventService: EventService,
-        private lightbox: CrystalLightbox) {
+  @HostBinding('class.lightbox-group') hostLightboxGroup = true;
+  @ContentChildren(LightboxDirective, { descendants: true })
+  _lightboxDirectiveList!: QueryList<LightboxDirective>;
+  constructor(
+    private eventService: EventService,
+    private lightbox: CrystalLightbox
+  ) {
+    this.eventService.emitter.pipe(takeUntilDestroyed()).subscribe((event) => {
+      this.handleGlobalEvents(event);
+    });
+  }
 
-        this.globalEventsSubscription = this.eventService.emitter.subscribe(
-            (event) => {
-                this.handleGlobalEvents(event); 
-            }
-        );
+  handleGlobalEvents(event: LightboxEvent) {
+    if (event.type === 'thumbnail:click') {
+      // TODO: fix types here
+      this.thumbnailImageElement = (event as any).elementRef.nativeElement;
+      this.thumbnailImages = this.getThumbnailImages();
+      const thumbnailImageIndex = this.getThumbnailImageIndex(
+        this.thumbnailImageElement
+      );
+
+      if (thumbnailImageIndex == undefined) {
+        return;
+      }
+
+      this.thumbnailImageIndex = thumbnailImageIndex;
+
+      this.thumbnailLightboxDirective = this.getThumbnailLightboxDirective(
+        this.thumbnailImageIndex
+      );
+      this.images = this.getImages();
+      // TODO: fix types here
+      this.properties = (event as any).properties;
+      this.properties.index = this.thumbnailImageIndex;
+
+      this.lightbox.open({
+        images: this.images,
+        //index: this.thumbnailImageIndex,
+        properties: this.properties,
+      });
     }
+  }
 
-    handleGlobalEvents(event){
-        if (event.type === 'thumbnail:click'){
-            this.thumbnailImageElement = event.elementRef.nativeElement;
-            this.thumbnailImages = this.getThumbnailImages();
-            this.thumbnailImageIndex = this.getThumbnailImageIndex(this.thumbnailImageElement);
-
-            if (this.thumbnailImageIndex == undefined){
-                return;
-            }
-
-            this.thumbnailLightboxDirective = this.getThumbnailLightboxDirective(this.thumbnailImageIndex);
-            this.images = this.getImages();
-            this.properties = event.properties;
-            this.properties.index = this.thumbnailImageIndex;
-
-            this.lightbox.open({
-                images: this.images,
-                //index: this.thumbnailImageIndex,
-                properties: this.properties
-            });
-        }
+  getThumbnailImageIndex(element: Element | undefined): number | undefined {
+    const images = this.thumbnailImages;
+    for (let i = 0; i < images.length; i++) {
+      if (element === images[i]) {
+        return i;
+      }
     }
+    return undefined;
+  }
 
-    getThumbnailImageIndex(element){
-        const images = this.thumbnailImages;
-        for (var i = 0; i < images.length; i++) {
-            if (element === images[i]){
-                return i;
-            }
-        }
-    }
+  getThumbnailLightboxDirective(index: number) {
+    return this.lightboxDirectiveList[index];
+  }
 
-    getThumbnailLightboxDirective(index){
-        return this.lightboxDirectiveList[index];
-    }
+  getThumbnailImages() {
+    const thumbnailImages: Element[] = [];
+    this.lightboxDirectiveList.forEach((el) => {
+      thumbnailImages.push(el['elementRef'].nativeElement);
+    });
+    return thumbnailImages;
+  }
 
-    getThumbnailImages(){
-        let thumbnailImages = [];
-        this.lightboxDirectiveList.forEach(el => {
-            thumbnailImages.push(el['elementRef'].nativeElement);
-        });
-        return thumbnailImages;
-    }
+  getImages() {
+    const images: ImageExtended[] = [];
+    this.lightboxDirectiveList.forEach((el) => {
+      const nativeElement = el['elementRef'].nativeElement;
 
-    getImages(){
-        let images = [];
-        this.lightboxDirectiveList.forEach(el => {
-            let image: ImageExtended = {};
-            const nativeElement = el['elementRef'].nativeElement;
+      const image: ImageExtended = {
+        fullImage: el.fullImage,
+        path: null,
+        nativeElement,
+        thumbnailImage: {
+          path: nativeElement.src,
+          height: nativeElement.naturalHeight,
+          width: nativeElement.naturalWidth,
+        },
+      };
+      images.push(image);
+    });
 
-            if (el.fullImage){
-                image.fullImage = el.fullImage;
-            }
-
-            image.thumbnailImage = {
-                path: nativeElement.src,
-                height: nativeElement.naturalHeight,
-                width: nativeElement.naturalWidth
-            }
-
-            image.nativeElement = nativeElement;
-            images.push(image);
-        });
-
-        return images;
-    }
+    return images;
+  }
 }

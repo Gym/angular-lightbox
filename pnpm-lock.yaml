@@ -8,6 +8,7 @@ specifiers:
   '@angular-eslint/eslint-plugin-template': ~16.0.0
   '@angular-eslint/template-parser': ~16.0.0
   '@angular/animations': ~16.0.0
+  '@angular/cdk': ~16.0.0
   '@angular/cli': ~16.0.0
   '@angular/common': ~16.0.0
   '@angular/compiler': ~16.0.0
@@ -59,6 +60,7 @@ specifiers:
 
 dependencies:
   '@angular/animations': 16.0.4_@angular+core@16.0.4
+  '@angular/cdk': 16.0.3_kofabtkp5u3cttmoq2bekbcd74
   '@angular/common': 16.0.4_rtb6cyesdkb354rudqsmds7bza
   '@angular/compiler': 16.0.4_@angular+core@16.0.4
   '@angular/core': 16.0.4_rxjs@7.8.1+zone.js@0.13.0
@@ -471,6 +473,24 @@ packages:
     dependencies:
       '@angular/core': 16.0.4_rxjs@7.8.1+zone.js@0.13.0
       tslib: 2.5.3
+
+  /@angular/cdk/16.0.3_kofabtkp5u3cttmoq2bekbcd74:
+    resolution:
+      {
+        integrity: sha512-KQCKWWNiHuYmzAVSiEyVs1P+859uhlvnmUH2azoL3qUHUcvdyB+iYqv9rTVRJl4N8nOpOYrj4JP3zmvNZLsI1Q==,
+      }
+    peerDependencies:
+      '@angular/common': ^16.0.0 || ^17.0.0
+      '@angular/core': ^16.0.0 || ^17.0.0
+      rxjs: ^6.5.3 || ^7.4.0
+    dependencies:
+      '@angular/common': 16.0.4_rtb6cyesdkb354rudqsmds7bza
+      '@angular/core': 16.0.4_rxjs@7.8.1+zone.js@0.13.0
+      rxjs: 7.8.1
+      tslib: 2.5.3
+    optionalDependencies:
+      parse5: 7.1.2
+    dev: false
 
   /@angular/cli/16.0.4:
     resolution:
